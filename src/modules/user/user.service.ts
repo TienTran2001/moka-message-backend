@@ -1,6 +1,7 @@
 import { Injectable, ConflictException, Logger } from '@nestjs/common';
 import { UserRepository } from './user.repository';
 import { SignUpBodyType, SignUpResponseType } from './user.schema';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
@@ -30,15 +31,19 @@ export class UserService {
     const existingUserByUsername = await this.userRepository.findOne({
       username: data.username,
     });
+
     if (existingUserByUsername) {
       throw new ConflictException('Username already exists');
     }
+
+    // hash password
+    const hashedPassword = await bcrypt.hash(data.hashedPassword, 10);
 
     const user = await this.userRepository.create({
       email: data.email,
       username: data.username,
       displayName: data.displayName,
-      hashedPassword: data.hashedPassword,
+      hashedPassword,
     });
 
     this.logger.log(`User created successfully: ${user.username}`);

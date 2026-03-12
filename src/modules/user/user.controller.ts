@@ -12,7 +12,7 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   /**
-   * POST /api/v1/auth/sign-up — đăng ký tài khoản
+   * POST /api/v1/users/auth/sign-up — đăng ký tài khoản
    */
   @Post('auth/sign-up')
   @HttpCode(HttpStatus.CREATED)

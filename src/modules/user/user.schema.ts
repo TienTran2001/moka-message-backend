@@ -25,7 +25,7 @@ export const SignUpBodySchema = UserSchema.pick({
   .extend({
     confirmPassword: z.string().min(6).max(100),
   })
-  .strict()
+  .strict() // không cho phép thêm field mới ngoài những field đã được khai báo
   .superRefine(({ confirmPassword, hashedPassword }, ctx) => {
     if (confirmPassword !== hashedPassword) {
       ctx.addIssue({
