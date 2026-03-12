@@ -8,9 +8,15 @@ import {
   AllExceptionsFilter,
 } from '@common/filters/http-exception.filter';
 import { UserModule } from './modules/user/user.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [UserModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    UserModule,
+  ],
   controllers: [AppController],
   providers: [
     AppService,

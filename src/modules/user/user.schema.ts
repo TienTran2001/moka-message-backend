@@ -40,6 +40,32 @@ export const SignUpResponseSchema = UserSchema.omit({
   hashedPassword: true,
 });
 
+// Sign in
+export const SignInBodySchema = z
+  .object({
+    email: z.string().email('Invalid email format'),
+    password: z
+      .string()
+      .min(6, 'Password must be at least 6 characters')
+      .max(100, 'Password must be at most 100 characters'),
+  })
+  .strict();
+
+export const SignInResponseSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string(),
+});
+
+// Sign out
+export const SignOutBodySchema = z
+  .object({
+    refreshToken: z.string(),
+  })
+  .strict();
+
 export type UserType = z.infer<typeof UserSchema>;
 export type SignUpBodyType = z.infer<typeof SignUpBodySchema>;
 export type SignUpResponseType = z.infer<typeof SignUpResponseSchema>;
+export type SignInBodyType = z.infer<typeof SignInBodySchema>;
+export type SignInResponseType = z.infer<typeof SignInResponseSchema>;
+export type SignOutBodyType = z.infer<typeof SignOutBodySchema>;
