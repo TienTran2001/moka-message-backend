@@ -1,0 +1,16 @@
+model User {
+  id             String   @id @default(uuid())
+  username       String   @unique
+  displayName    String
+  email          String   @unique
+  hashedPassword String
+  avatarUrl      String?
+  avatarId       String?
+  bio            String?
+  phone          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([email])
+  @@index([username])
+}
