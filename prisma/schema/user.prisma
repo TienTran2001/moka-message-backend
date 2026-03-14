@@ -8,6 +8,11 @@ model User {
   avatarId       String?
   bio            String?
   phone          String?
+
+  // Friendships
+  friendships   Friendship[] @relation("UserFriendships")  // relationships mà user sở hữu
+  friendOf      Friendship[] @relation("FriendOfUser")    // relationships mà user là bạn bè
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

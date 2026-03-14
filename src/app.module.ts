@@ -9,6 +9,7 @@ import {
 } from '@common/filters/http-exception.filter';
 import { UserModule } from './modules/user/user.module';
 import { ConfigModule } from '@nestjs/config';
+import { FriendshipModule } from './modules/friendship/friendship.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { ConfigModule } from '@nestjs/config';
       isGlobal: true,
     }),
     UserModule,
+    FriendshipModule,
   ],
   controllers: [AppController],
   providers: [
