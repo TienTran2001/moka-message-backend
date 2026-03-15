@@ -1,0 +1,26 @@
+enum ConversationType {
+  DIRECT
+  GROUP
+}
+
+
+model Conversation {
+  id   String           @id @default(uuid())
+  type ConversationType
+  name String?
+
+  createdById String?
+  createdBy   User?  @relation("ConversationCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  participants Participant[]
+  messages     Message[]
+
+  lastMessageId String?
+  lastMessage   Message?  @relation("LastMessage", fields: [lastMessageId], references: [id], onDelete: SetNull)
+  lastMessageAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([lastMessageAt])
+}

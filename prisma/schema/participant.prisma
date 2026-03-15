@@ -1,0 +1,21 @@
+enum ParticipantRole {
+  MEMBER
+  ADMIN
+}
+
+model Participant {
+  id             String          @id @default(uuid())
+  conversationId String
+  userId         String
+  role           ParticipantRole @default(MEMBER)
+
+  joinedAt    DateTime  @default(now())
+  lastSeenAt  DateTime?
+  unreadCount Int       @default(0)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+}

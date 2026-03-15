@@ -1,0 +1,25 @@
+enum MessageType {
+  TEXT
+  IMAGE
+}
+
+model Message {
+  id             String      @id @default(uuid())
+  conversationId String
+  senderId       String?
+
+  type    MessageType @default(TEXT)
+  content String?
+  fileUrl String?
+
+  conversation       Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender             User?          @relation("MessageSender", fields: [senderId], references: [id], onDelete: SetNull)
+  lastOfConversation Conversation[] @relation("LastMessage")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+}

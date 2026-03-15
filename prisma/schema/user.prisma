@@ -9,14 +9,22 @@ model User {
   bio            String?
   phone          String?
 
+  sessions Session[]
   // Friendships
   friendships   Friendship[] @relation("UserFriendships")  // relationships mà user sở hữu
   friendOf      Friendship[] @relation("FriendOfUser")    // relationships mà user là bạn bè
 
+  createdConversations Conversation[] @relation("ConversationCreator")
+  participants         Participant[]
+  messages             Message[]      @relation("MessageSender")
+
+
+
+
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  sessions Session[]
 
   @@index([email])
   @@index([username])
