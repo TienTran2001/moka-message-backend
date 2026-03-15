@@ -8,16 +8,29 @@ import {
   AllExceptionsFilter,
 } from '@common/filters/http-exception.filter';
 import { UserModule } from './modules/user/user.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { FriendshipModule } from './modules/friendship/friendship.module';
+import { JwtModule } from '@nestjs/jwt';
+import { ConversationModule } from './modules/conversation/conversation.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    JwtModule.registerAsync({
+      global: true,
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.getOrThrow<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '1h' },
+      }),
+      inject: [ConfigService],
+    }),
     UserModule,
     FriendshipModule,
+    ConversationModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [
