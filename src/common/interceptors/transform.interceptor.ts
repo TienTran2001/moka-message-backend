@@ -23,6 +23,10 @@ export class TransformInterceptor<T> implements NestInterceptor<
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<ApiSuccessResponse<T>> {
+    // Skip WebSocket — only wrap response for HTTP
+    if (context.getType() !== 'http') {
+      return next.handle();
+    }
     return next.handle().pipe(
       map((data) => ({
         success: true as const,
