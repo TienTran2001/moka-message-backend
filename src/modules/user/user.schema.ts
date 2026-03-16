@@ -63,9 +63,25 @@ export const SignOutBodySchema = z
   })
   .strict();
 
+// refresh token
+export const RefreshTokenBodySchema = z
+  .object({
+    refreshToken: z.string(),
+  })
+  .strict();
+
+export const RefreshTokenResponseSchema = z.object({
+  accessToken: z.string(),
+  refreshToken: z.string(),
+});
+
 export type UserType = z.infer<typeof UserSchema>;
 export type SignUpBodyType = z.infer<typeof SignUpBodySchema>;
 export type SignUpResponseType = z.infer<typeof SignUpResponseSchema>;
 export type SignInBodyType = z.infer<typeof SignInBodySchema>;
 export type SignInResponseType = z.infer<typeof SignInResponseSchema>;
 export type SignOutBodyType = z.infer<typeof SignOutBodySchema>;
+export type RefreshTokenBodyType = z.infer<typeof RefreshTokenBodySchema>;
+export type RefreshTokenResponseType = z.infer<
+  typeof RefreshTokenResponseSchema
+>;

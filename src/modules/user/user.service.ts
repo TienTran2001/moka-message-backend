@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { UserRepository } from './user.repository';
 import {
+  RefreshTokenBodyType,
+  RefreshTokenResponseType,
   SignInBodyType,
   SignInResponseType,
   SignOutBodyType,
@@ -147,5 +149,81 @@ export class UserService {
     // Delete session
     await this.sessionRepository.deleteById(session.id);
     this.logger.log(`User signed out successfully: ${userId}`);
+  }
+
+  // Refresh Token
+  async refreshToken(
+    data: RefreshTokenBodyType,
+  ): Promise<RefreshTokenResponseType> {
+    this.logger.log('Processing refresh token request');
+
+    // 1. Verify JWT signature of refresh token
+    let payload: { sub: string; email: string };
+    try {
+      payload = await this.jwtService.verifyAsync<{
+        sub: string;
+        email: string;
+      }>(data.refreshToken, {
+        secret: this.configService.getOrThrow<string>('JWT_SECRET'),
+      });
+    } catch {
+      throw new UnauthorizedException('Refresh token is invalid or expired');
+    }
+
+    // 2. Check if refresh token exists in database
+    const session = await this.sessionRepository.findByRefreshToken(
+      data.refreshToken,
+    );
+
+    if (!session) {
+      throw new UnauthorizedException('Refresh token not found');
+    }
+
+    // 3. Check if session has expired
+    if (new Date() > session.expiresAt) {
+      // Delete expired session
+      await this.sessionRepository.deleteById(session.id);
+      throw new UnauthorizedException('Refresh token has expired');
+    }
+
+    // 4. Check if session belongs to the user in the token
+    if (session.userId !== payload.sub) {
+      throw new UnauthorizedException('Refresh token does not match user');
+    }
+
+    // 5. Generate new tokens
+    const newPayload = {
+      sub: payload.sub,
+      email: payload.email,
+    };
+
+    const newAccessToken = this.jwtService.sign(newPayload, {
+      expiresIn: Number(
+        this.configService.getOrThrow<number>('JWT_ACCESS_EXPIRES_IN'),
+      ),
+    });
+
+    const newRefreshToken = this.jwtService.sign(newPayload, {
+      expiresIn: Number(
+        this.configService.getOrThrow<number>('JWT_REFRESH_EXPIRES_IN'),
+      ),
+    });
+
+    // 6. Rotate: update session with new refresh token
+    const newExpiresAt = new Date();
+    newExpiresAt.setDate(newExpiresAt.getDate() + 7);
+
+    await this.sessionRepository.updateRefreshToken(
+      session.id,
+      newRefreshToken,
+      newExpiresAt,
+    );
+
+    this.logger.log(`Token refreshed successfully for user: ${payload.email}`);
+
+    return {
+      accessToken: newAccessToken,
+      refreshToken: newRefreshToken,
+    };
   }
 }

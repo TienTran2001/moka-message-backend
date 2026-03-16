@@ -28,4 +28,19 @@ export class SessionRepository {
   async deleteByUserId(userId: string) {
     return await this.prisma.session.deleteMany({ where: { userId } });
   }
+
+  // Update refresh token
+  async updateRefreshToken(
+    id: string,
+    newRefreshToken: string,
+    newExpiresAt: Date,
+  ) {
+    return await this.prisma.session.update({
+      where: { id },
+      data: {
+        refreshToken: newRefreshToken,
+        expiresAt: newExpiresAt,
+      },
+    });
+  }
 }

@@ -9,6 +9,9 @@ import {
 import { UserService } from './user.service';
 import { ZodValidationPipe } from '@common/pipes/zod-validation.pipe';
 import {
+  RefreshTokenBodySchema,
+  RefreshTokenBodyType,
+  RefreshTokenResponseType,
   SignInBodySchema,
   SignInBodyType,
   SignInResponseType,
@@ -61,5 +64,17 @@ export class UserController {
     body: SignOutBodyType,
   ): Promise<void> {
     return await this.userService.signOut(userId, body);
+  }
+
+  /**
+   * POST /api/v1/users/auth/refresh-token — refresh access token
+   */
+  @Post('auth/refresh-token')
+  @HttpCode(HttpStatus.OK)
+  async refreshToken(
+    @Body(new ZodValidationPipe(RefreshTokenBodySchema))
+    body: RefreshTokenBodyType,
+  ): Promise<RefreshTokenResponseType> {
+    return await this.userService.refreshToken(body);
   }
 }
