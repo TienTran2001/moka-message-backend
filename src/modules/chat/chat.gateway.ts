@@ -8,11 +8,12 @@ import {
   ConnectedSocket,
   MessageBody,
 } from '@nestjs/websockets';
-import { Logger, UseGuards } from '@nestjs/common';
+import { forwardRef, Inject, Logger, UseGuards } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { WsJwtGuard } from './chat.guard';
+import { MessageService } from '../message/message.service';
 
 @WebSocketGateway({
   cors: {
@@ -31,6 +32,8 @@ export class ChatGateway
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => MessageService))
+    private readonly messageService: MessageService,
   ) {}
 
   afterInit() {
@@ -84,6 +87,7 @@ export class ChatGateway
     @MessageBody() data: { conversationId: string },
   ) {
     client.join(`conversation:${data.conversationId}`);
+
     this.logger.log(
       `User ${client.data.user.sub} joined conversation:${data.conversationId}`,
     );
@@ -112,33 +116,37 @@ export class ChatGateway
     };
   }
 
-  /**
-   * Client send message
-   * Client send: socket.emit('sendMessage', { conversationId: '...', content: '...' })
-   */
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('sendMessage')
-  handleSendMessage(
+  async handleSendMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { conversationId: string; content: string },
+    @MessageBody()
+    data: {
+      conversationId: string;
+      content: string;
+      type?: 'TEXT' | 'IMAGE';
+      fileUrl?: string;
+    },
   ) {
     const userId = client.data.user.sub;
 
-    // Emit to all users in conversation (except sender)
-    client.to(`conversation:${data.conversationId}`).emit('newMessage', {
+    // Save to DB + emit to conversation room
+    const message = await this.messageService.sendMessage(userId, {
       conversationId: data.conversationId,
-      senderId: userId,
+      type: data.type ?? 'TEXT',
       content: data.content,
-      createdAt: new Date().toISOString(),
+      fileUrl: data.fileUrl,
     });
 
-    this.logger.log(
-      `Message from ${userId} to conversation:${data.conversationId}`,
-    );
+    // Emit to the conversation room
+    client
+      .to(`conversation:${data.conversationId}`)
+      .emit('newMessage', message);
 
-    return { event: 'messageSent', data: { status: 'ok' } };
+    // Emit to the client who sent the message
+    client.emit('messageSent', message);
+    this.logger.log(`Message sent to conversation:${data.conversationId}`);
   }
-
   /**
    * Helper: Emit event to a specific user (used from other service)
    */
